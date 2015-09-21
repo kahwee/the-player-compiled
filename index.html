@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>tag-validator</title>
+  <link href="dist/app.css" media="all" rel="stylesheet">
+  <script src="bower_components/video.js/dist/video-js/video.js"></script>
+  <script src="vendors/videojs-vast-vpaid-without-credentials.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4" style="background: yellow;">
+        <ul id="logger">
+        </ul>
+      </div>
+      <div class="col-md-8" style="background: blue;">
+        <form id="main">
+          <fieldset class="form-group">
+            <label for="input-url">URL</label>
+            <div class="input-group">
+              <input type="url" class="form-control" id="input-url" placeholder="Enter URL" value="https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml">
+              <span class="input-group-btn">
+                <button class="btn btn-secondary" type="submit">Go!</button>
+              </span>
+            </div>
+            <small class="text-muted">Currently only supporting URL</small>
+          </fieldset>
+        </form>
+        <section>
+          <video id="the-player" class="video-js vjs-default-skin" controls preload="auto" width="600" height="320" poster="http://video-js.zencoder.com/oceans-clip.png">
+            <source type="video/mp4" src="http://video-js.zencoder.com/oceans-clip.mp4">
+            <source type="video/webm" src="http://video-js.zencoder.com/oceans-clip.webm">
+            <source type="video/ogv" src="http://video-js.zencoder.com/oceans-clip.ogv">
+          </video>
+        </section>
+      </div>
+    </div>
+  </div>
+  <script src="dist/app.js"></script>
+</body>
+</html>
