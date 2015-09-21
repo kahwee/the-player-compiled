@@ -4312,52 +4312,40 @@ var _adsSetupPlugin = require('./ads-setup-plugin');
 
 var _adsSetupPlugin2 = _interopRequireDefault(_adsSetupPlugin);
 
+var _utilGetDomain = require('./util/get-domain');
+
+var _utilGetDomain2 = _interopRequireDefault(_utilGetDomain);
+
 var _constantsVideojsOptions = require('./constants/videojs-options');
 
 var _constantsVideojsOptions2 = _interopRequireDefault(_constantsVideojsOptions);
 
-var _logger = require('./logger');
+var _componentsLogger = require('./components/Logger');
 
-var _logger2 = _interopRequireDefault(_logger);
+var _componentsLogger2 = _interopRequireDefault(_componentsLogger);
 
-var _updateVideo = require('./update-video');
+var _componentsPlayer = require('./components/Player');
 
-var _updateVideo2 = _interopRequireDefault(_updateVideo);
+var _componentsPlayer2 = _interopRequireDefault(_componentsPlayer);
 
 require('babel-core/polyfill');
 
 videojs.plugin('ads-setup', _adsSetupPlugin2['default']);
 
-var logger = new _logger2['default']();
-
+var logger = new _componentsLogger2['default']('logger');
+var player = new _componentsPlayer2['default']('the-player');
 var form = document.getElementById('main');
 var inputControl = document.getElementById('input-url');
 form.addEventListener('submit', function (ev) {
   ev.preventDefault();
   var opts = Object.assign({}, _constantsVideojsOptions2['default']);
   opts.plugins['ads-setup'].adsTag = inputControl.value;
-  logger.add('Loaded: ' + inputControl.value);
-  (0, _updateVideo2['default'])(opts);
+  player.setOptions(opts);
+  player.update();
+  logger.add('Loaded from ' + (0, _utilGetDomain2['default'])(inputControl.value));
 });
 
-},{"./ads-setup-plugin":184,"./constants/videojs-options":186,"./logger":187,"./update-video":188,"babel-core/polyfill":182}],186:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-exports['default'] = {
-  'plugins': {
-    'ads-setup': {
-      'adCancelTimeout': 20000, // Wait for ten seconds before canceling the ad.
-      'adsEnabled': true,
-      'adsTag': 'https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml'
-    }
-  }
-};
-module.exports = exports['default'];
-
-},{}],187:[function(require,module,exports){
+},{"./ads-setup-plugin":184,"./components/Logger":186,"./components/Player":187,"./constants/videojs-options":189,"./util/get-domain":190,"babel-core/polyfill":182}],186:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -4369,10 +4357,10 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Logger = (function () {
-  function Logger() {
+  function Logger(id) {
     _classCallCheck(this, Logger);
 
-    this.el = document.getElementById('logger');
+    this.el = document.getElementById(id);
   }
 
   _createClass(Logger, [{
@@ -4391,57 +4379,131 @@ var Logger = (function () {
 exports['default'] = Logger;
 module.exports = exports['default'];
 
-},{}],188:[function(require,module,exports){
+},{}],187:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
 
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _logger = require('./logger');
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _logger2 = _interopRequireDefault(_logger);
+var _Logger = require('./Logger');
 
-var logger = new _logger2['default']();
+var _Logger2 = _interopRequireDefault(_Logger);
 
-exports['default'] = function (opts) {
-  var player = videojs(document.getElementById('the-player'), opts);
+var _constantsEvents = require('../constants/events');
 
-  player.ready(function () {
-    var _this = this;
+var events = _interopRequireWildcard(_constantsEvents);
 
-    var videoJsEvents = ['firstplay', 'fullscreenchange', 'pause', 'error', 'loadstart'];
-    var vpaidEvents = ['vast.firstPlay', 'vast.adStart', 'vast.adSkip', 'vast.adError', 'vast.adsCancel', 'vast.contentStart', 'vast.contentEnded', 'vpaid.AdVideoFirstQuartile', 'vpaid.AdVideoThirdQuartile', 'vpaid.AdVideoComplete', 'vpaid.AdClickThru', 'vpaid.AdUserClose', 'vpaid.AdVideoMidpoint', 'vast.reset'];
+var Player = (function () {
+  function Player(id) {
+    _classCallCheck(this, Player);
 
-    var vastVPaidEvents = ['AdLoaded', 'AdStarted', 'AdStopped', 'AdSkipped', 'AdSkippableStateChange', // VPAID 2.0 new event
-    'AdSizeChange', // VPAID 2.0 new event
-    'AdLinearChange', 'AdDurationChange', // VPAID 2.0 new event
-    'AdExpandedChange', 'AdRemainingTimeChange', // [Deprecated in 2.0] but will be still fired for backwards compatibility
-    'AdVolumeChange', 'AdImpression', 'AdVideoStart', 'AdVideoFirstQuartile', 'AdVideoMidpoint', 'AdVideoThirdQuartile', 'AdVideoComplete', 'AdClickThru', 'AdInteraction', // VPAID 2.0 new event
-    'AdUserAcceptInvitation', 'AdUserMinimize', 'AdUserClose', 'AdPaused', 'AdPlaying', 'AdLog', 'AdError'];
+    this.logger = new _Logger2['default']('logger');
+    this.el = document.getElementById(id);
+  }
 
-    videoJsEvents.forEach(function (eventName) {
-      _this.on(eventName, function (ev) {
-        logger.add('' + ev.type);
-        console.warn('videoJs Event', ev);
+  _createClass(Player, [{
+    key: 'setOptions',
+    value: function setOptions(opts) {
+      this.videojs = videojs(this.el, opts);
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      var logger = this.logger;
+      this.videojs.ready(function () {
+        var _this = this;
+
+        events.videojs.forEach(function (eventName) {
+          _this.on(eventName, function (ev) {
+            logger.add('' + ev.type);
+          });
+        });
+        events.vast.forEach(function (eventName) {
+          _this.on(eventName, function (ev) {
+            logger.add('' + ev.type);
+          });
+        });
+        events.vpaid.forEach(function (eventName) {
+          _this.on(eventName, function (ev) {
+            logger.add('' + ev.type);
+          });
+        });
+        this.play();
       });
-    });
-    vpaidEvents.forEach(function (eventName) {
-      _this.on(eventName, function (ev) {
-        logger.add('' + ev.type);
-        console.warn('vpaid events', ev);
-      });
-    });
-    vastVPaidEvents.forEach(function (eventName) {
-      _this.on(eventName, function (ev) {
-        console.warn('vastVPaidEvents events', ev);
-      });
-    });
-  });
+    }
+  }]);
+
+  return Player;
+})();
+
+exports['default'] = Player;
+module.exports = exports['default'];
+
+},{"../constants/events":188,"./Logger":186}],188:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+var videojs = ['firstplay', 'fullscreenchange', 'pause', 'error', 'loadstart'];
+
+exports.videojs = videojs;
+var vast = ['vast.firstPlay', 'vast.adStart', 'vast.adSkip', 'vast.adError', 'vast.adsCancel', 'vast.contentStart', 'vast.contentEnded', 'vast.reset'];
+
+exports.vast = vast;
+var vpaid = ['AdLoaded', 'AdStarted', 'AdStopped', 'AdSkipped', 'AdSkippableStateChange', // VPAID 2.0 new event
+'AdSizeChange', // VPAID 2.0 new event
+'AdLinearChange', 'AdDurationChange', // VPAID 2.0 new event
+'AdExpandedChange', 'AdRemainingTimeChange', // [Deprecated in 2.0] but will be still fired for backwards compatibility
+'AdVolumeChange', 'AdImpression', 'AdVideoStart', 'AdVideoFirstQuartile', 'AdVideoMidpoint', 'AdVideoThirdQuartile', 'AdVideoComplete', 'AdClickThru', 'AdInteraction', // VPAID 2.0 new event
+'AdUserAcceptInvitation', 'AdUserMinimize', 'AdUserClose', 'AdPaused', 'AdPlaying', 'AdLog', 'AdError'];
+
+exports.vpaid = vpaid;
+exports.vpaid = vpaid = vpaid.map(function (suffix) {
+  return 'vpaid.' + suffix;
+});
+
+},{}],189:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports['default'] = {
+  'plugins': {
+    'ads-setup': {
+      'adCancelTimeout': 20000, // Wait for ten seconds before canceling the ad.
+      'adsEnabled': true
+    }
+  }
 };
+module.exports = exports['default'];
+
+},{}],190:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports['default'] = getDomain;
+
+function getDomain(url) {
+  url = url.replace(/https?:\/\/(www.)?/i, '');
+  if (url.indexOf('/') === -1) {
+    return url;
+  }
+  return url.split('/')[0];
+}
 
 module.exports = exports['default'];
 
-},{"./logger":187}]},{},[185]);
+},{}]},{},[185]);
