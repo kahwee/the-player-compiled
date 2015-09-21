@@ -4336,13 +4336,23 @@ var logger = new _componentsLogger2['default']('logger');
 var player = new _componentsPlayer2['default']('the-player');
 var form = document.getElementById('main');
 var inputControl = document.getElementById('input-url');
+var pauseResume = document.getElementById('pause-resume');
 form.addEventListener('submit', function (ev) {
   ev.preventDefault();
   var opts = Object.assign({}, _constantsVideojsOptions2['default']);
   opts.plugins['ads-setup'].adsTag = inputControl.value;
-  player.setOptions(opts);
+  player.startVideojs(opts);
   player.update();
   logger.add('Loaded from ' + (0, _utilGetDomain2['default'])(inputControl.value));
+  pauseResume.disabled = false;
+});
+pauseResume.addEventListener('click', function (ev) {
+  ev.preventDefault();
+  if (player.videojs.vast.adUnit.isPaused()) {
+    player.videojs.vast.adUnit.resumeAd();
+  } else {
+    player.videojs.vast.adUnit.pauseAd();
+  }
 });
 
 },{"./ads-setup-plugin":184,"./components/Logger":186,"./components/Player":187,"./constants/videojs-options":189,"./util/get-domain":190,"babel-core/polyfill":182}],186:[function(require,module,exports){
@@ -4411,8 +4421,8 @@ var Player = (function () {
   }
 
   _createClass(Player, [{
-    key: 'setOptions',
-    value: function setOptions(opts) {
+    key: 'startVideojs',
+    value: function startVideojs(opts) {
       this.videojs = videojs(this.el, opts);
     }
   }, {
