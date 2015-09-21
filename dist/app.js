@@ -4380,6 +4380,7 @@ var Logger = (function () {
     value: function add(message) {
       var li = document.createElement('li');
       li.textContent = message;
+      li.className = 'list-group-item';
       this.el.appendChild(li);
     }
   }]);

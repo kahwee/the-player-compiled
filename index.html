@@ -9,11 +9,11 @@
 <body>
   <div class="container">
     <div class="row">
-      <div class="col-md-4" style="background: yellow;">
-        <ul id="logger">
+      <div class="col-md-4">
+        <ul id="logger" class="list-group">
         </ul>
       </div>
-      <div class="col-md-8" style="background: blue;">
+      <div class="col-md-8">
         <form id="main">
           <fieldset class="form-group">
             <label for="input-url">URL</label>
@@ -26,8 +26,8 @@
             <small class="text-muted">Currently only supporting URL</small>
           </fieldset>
         </form>
-        <section>
-          <video id="the-player" class="video-js vjs-default-skin" controls preload="auto" width="600" height="320" poster="http://video-js.zencoder.com/oceans-clip.png">
+        <section class="embed-responsive embed-responsive-16by9">
+          <video id="the-player" class="video-js vjs-default-skin embed-responsive-item" controls preload="auto" width="600" height="320" poster="http://video-js.zencoder.com/oceans-clip.png">
             <source type="video/mp4" src="http://video-js.zencoder.com/oceans-clip.mp4">
             <source type="video/webm" src="http://video-js.zencoder.com/oceans-clip.webm">
             <source type="video/ogv" src="http://video-js.zencoder.com/oceans-clip.ogv">
