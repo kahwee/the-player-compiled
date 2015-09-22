@@ -4272,13 +4272,23 @@ function molVastSetup(opts) {
   var player = this;
   var options = Object.assign({}, this.options_, opts);
 
-  var vastAd = player.vastClient({
-    url: getAdsUrl,
+  var pluginSettings = {
+    url: getAdTagUrl,
     playAdAlways: true,
     adCancelTimeout: options.adCancelTimeout || 3000,
     adsEnabled: !!options.adsEnabled,
     vpaidFlashLoaderPath: './VPAIDFlash.swf'
-  });
+  };
+
+  if (options.adTagUrl) {
+    pluginSettings.adTagUrl = pluginSettings.url = options.adTagUrl;
+  }
+
+  if (options.adTagXML) {
+    pluginSettings.adTagXML = pluginSettings.url = options.adTagXML;
+  }
+
+  var vastAd = player.vastClient(pluginSettings);
 
   player.on('reset', function () {
     if (player.options().plugins['ads-setup'].adsEnabled) {
@@ -4292,12 +4302,12 @@ function molVastSetup(opts) {
     var error = evt.error;
 
     if (error && error.message) {
-      console.error(error.message);
+      messages.error(error.message);
     }
   });
 
-  function getAdsUrl() {
-    return options.adsTag;
+  function getAdTagUrl() {
+    return options.adTagUrl;
   }
 }
 
@@ -4340,7 +4350,7 @@ var pauseResume = document.getElementById('pause-resume');
 form.addEventListener('submit', function (ev) {
   ev.preventDefault();
   var opts = Object.assign({}, _constantsVideojsOptions2['default']);
-  opts.plugins['ads-setup'].adsTag = inputControl.value;
+  opts.plugins['ads-setup'].adTagUrl = localStorage.lastUsed = inputControl.value;
   player.startVideojs(opts);
   player.update();
   logger.add('Loaded from ' + (0, _utilGetDomain2['default'])(inputControl.value));

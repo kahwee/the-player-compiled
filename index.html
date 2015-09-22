@@ -18,7 +18,7 @@
           <fieldset class="form-group">
             <label for="input-url">URL</label>
             <div class="input-group">
-              <textarea type="url" class="form-control" id="input-url" placeholder="Enter URL">https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml</textarea>
+              <textarea rows="3" class="form-control" id="input-url" placeholder="Enter URL">https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml</textarea>
               <span class="input-group-btn">
                 <button class="btn btn-secondary" type="submit">Load</button>
               </span>
@@ -37,6 +37,12 @@
       </div>
     </div>
   </div>
+  <script>
+    if (!localStorage.lastUsed) {
+      localStorage.lastUsed = 'https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml'
+    }
+    document.getElementById('input-url').value = localStorage.lastUsed
+  </script>
   <script src="dist/app.js"></script>
 </body>
 </html>
