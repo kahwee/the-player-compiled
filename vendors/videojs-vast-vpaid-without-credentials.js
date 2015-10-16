@@ -2822,13 +2822,14 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
     // on ios7, fiddling with textTracks too early will cause safari to crash
     player.one('contentloadedmetadata', restoreTracks);
 
+    player.one('canplay', tryToResume);
+    ensureCanplayEvtGetsFired();
+
     // if the src changed for ad playback, reset it
     player.src({src: snapshot.src, type: snapshot.type});
 
     // safari requires a call to `load` to pick up a changed source
     player.load();
-
-    resumeVideo();
 
   } else {
     restoreTracks();
@@ -2840,16 +2841,17 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
 
   /*** Local Functions ***/
 
-  function resumeVideo() {
-    //Sometimes when the page is too heavy the canplay evt is not triggered on firefox.
-    //This code ensure that it gets fired always
+  /**
+   * Sometimes firefox does not trigger the 'canplay' evt.
+   * This code ensure that it always gets triggered triggered.
+   */
+  function ensureCanplayEvtGetsFired() {
     var timeoutId = setTimeout(function() {
       player.trigger('canplay');
     }, 1000);
 
     player.one('canplay', function(){
       clearTimeout(timeoutId);
-      tryToResume();
     });
   }
 
@@ -3451,12 +3453,20 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   var settings = extend({}, defaultOpts, options || {});
 
-  if (isString(settings.url)) {
-    settings.url = echoFn(settings.url);
+  if(isUndefined(settings.adTagUrl) && isDefined(settings.url)){
+    settings.adTagUrl = settings.url;
   }
 
-  if (!isDefined(settings.url)) {
-    return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
+  if (isString(settings.adTagUrl)) {
+    settings.adTagUrl = echoFn(settings.adTagUrl);
+  }
+
+  if (isDefined(settings.adTagXML) && !isFunction(settings.adTagXML)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, the passed adTagXML option does not contain a function'));
+  }
+
+  if (!isDefined(settings.adTagUrl) && !isFunction(settings.adTagXML)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
 
   playerUtils.prepareForAds(player);
@@ -3471,11 +3481,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
-
-  //If there is an error on the player, we reset the plugin.
-  player.on('error', function() {
-    player.trigger('vast.reset');
-  });
 
   player.on('vast.reset', function () {
     //If we are reseting the plugin, we don't want to restore the content
@@ -3623,7 +3628,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function getVastResponse(callback) {
-    vast.getVASTResponse(settings.url(), callback);
+    vast.getVASTResponse(settings.adTagUrl ? settings.adTagUrl() : settings.adTagXML, callback);
   }
 
   function playAd(vastResponse, callback) {
@@ -3716,10 +3721,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 });
 
 ;
-vjs.AdsLabel = vjs.Component.extend({
+vjs.AdsLabel = vjs.extend(vjsComponent, {
   /** @constructor */
-  init: function (player, options) {
-    vjs.Component.call(this, player, options);
+  constructor: function (player, options) {
+    vjsComponent.call(this, player, options);
 
     var that = this;
 
@@ -3735,7 +3740,7 @@ vjs.AdsLabel = vjs.Component.extend({
 });
 
 vjs.AdsLabel.prototype.createEl = function(){
-  return vjs.Component.prototype.createEl.call(this, 'div', {
+  return vjsComponent.prototype.createEl.call(this, 'div', {
     className: 'vjs-ads-label vjs-control vjs-label-hidden',
     innerHTML: 'Advertisement'
   });
@@ -3755,10 +3760,10 @@ vjs.AdsLabel.prototype.createEl = function(){
  * @param {Object=} options
  * @constructor
  */
-vjs.BlackPoster = vjs.Component.extend({
+vjs.BlackPoster = vjs.extend(vjsComponent, {
   /** @constructor */
-  init: function(player, options){
-    vjs.Component.call(this, player, options);
+  constructor: function(player, options){
+    vjsComponent.call(this, player, options);
 
     var posterImg = player.getChild('posterImage');
 
@@ -3776,7 +3781,7 @@ vjs.BlackPoster = vjs.Component.extend({
  * @return {Element}
  */
 vjs.BlackPoster.prototype.createEl = function(){
-  return vjs.createEl('div', {
+  return vjsComponent.prototype.createEl('div', {
     className: 'vjs-black-poster'
   });
 };
@@ -4191,10 +4196,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
-  player.on('error', triggerVpaidAdEnd);
   player.on('vast.adsCancel', triggerVpaidAdEnd);
   player.one('vpaid.adEnd', function(){
-    player.off('error', triggerVpaidAdEnd);
     player.off('vast.adsCancel', triggerVpaidAdEnd);
     removeAdUnit();
   });
@@ -4389,6 +4392,8 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdPaused', function () {
+    console.log('hello');
+    window.player = player;
     player.trigger('vpaid.AdPaused');
     tracker.trackPause();
     notifyPauseToPlayer();
@@ -4840,14 +4845,14 @@ function VASTClient(options) {
   this.errorURLMacros = [];
 }
 
-VASTClient.prototype.getVASTResponse = function getVASTResponse(url, callback) {
+VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callback) {
   var that = this;
 
   //We reset the errorURLMacros before doing anything.
   this.errorURLMacros = [];
 
   async.waterfall([
-      this._getAd.bind(this, url),
+      this._getAd.bind(this, adTagUrl),
       buildVASTResponse
     ],
     this._sendVASTResponse(callback));
@@ -4875,10 +4880,10 @@ VASTClient.prototype._sendVASTResponse = function sendVASTResponse(callback) {
   };
 };
 
-VASTClient.prototype._getAd = function getVASTAd(url, callback) {
+VASTClient.prototype._getAd = function getVASTAd(adTagUrl, callback) {
   var error;
   var that = this;
-  var options = isObject(url) && !isNull(url) ? url : {url: url};
+  var options = isObject(adTagUrl) && !isNull(adTagUrl) ? adTagUrl : {adTagUrl: adTagUrl};
   options.ads = options.ads || [];
   error = sanityCheck(options, callback);
   if (error) {
@@ -4895,8 +4900,8 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
 
   /*** local function ***/
   function sanityCheck(opts, cb) {
-    if (!isString(opts.url)) {
-      return new VASTError('on VASTClient._getAd, missing video tag URL');
+    if (!opts.adTagUrl) {
+      return new VASTError('on VASTClient._getAd, missing ad tag URL');
     }
 
     if (!isFunction(cb)) {
@@ -4909,7 +4914,7 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
   }
 
   function requestVASTXml(callback) {
-    that._requestVASTXml(options.url, callback);
+    that._requestVASTXml(options.adTagUrl, callback);
   }
 
   function buildAd(adXML, callback) {
@@ -4949,25 +4954,36 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
 
     function getNextAd(ad, previousAds, callback) {
       return that._getAd({
-        url: ad.wrapper.VASTAdTagURI,
+        adTagUrl: ad.wrapper.VASTAdTagURI,
         ads: previousAds.concat(ad)
       }, callback);
     }
   }
 };
 
-VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
-  try{
-    http.get(url, function (error, response, status){
-      if(error) {
-        return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
-      }
-      callback(null, response);
-    }, {
-      withCredentials: false
-    });
-  }catch(e){
+VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callback) {
+  try {
+    if (isFunction(adTagUrl)) {
+      adTagUrl(requestHandler);
+    } else {
+      http.get(adTagUrl, requestHandler, {
+        withCredentials: false
+      });
+    }
+  } catch (e) {
     callback(e);
+  }
+
+  /*** Local functions ***/
+  function requestHandler(error, response, status) {
+    if (error) {
+      var errMsg = isDefined(status)?
+            "on VASTClient.requestVastXML, HTTP request error with status '" + status + "'" :
+            "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn";
+      return callback(new VASTError(errMsg, 301));
+    }
+
+    callback(null, response);
   }
 };
 
@@ -4987,8 +5003,8 @@ VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {
     throw new VASTError('on VASTClient.buildVastTree, no Ad in VAST tree', 303);
   }
 
-  if(vastVersion && (vastVersion != 3 && vastVersion != 2)){
-    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102);
+  if (vastVersion && (vastVersion != 3 && vastVersion != 2)) {
+    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "' + vastVersion + '"', 102);
   }
 
   return vastTree;
@@ -5012,11 +5028,11 @@ VASTClient.prototype._buildAd = function buildAd(adJxonTree) {
   /*** Local Functions ***/
 
   function addErrorUrlMacros(ad) {
-    if(ad.wrapper && ad.wrapper.error) {
+    if (ad.wrapper && ad.wrapper.error) {
       that.errorURLMacros.push(ad.wrapper.error);
     }
 
-    if(ad.inLine && ad.inLine.error){
+    if (ad.inLine && ad.inLine.error) {
       that.errorURLMacros.push(ad.inLine.error);
     }
   }
@@ -5064,7 +5080,7 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
   function validateResponse(response) {
     var progressEvents = response.trackingEvents.progress;
 
-    if(!response.hasLinear()){
+    if (!response.hasLinear()) {
       throw new VASTError("on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
     }
 
@@ -5073,7 +5089,7 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
     }
 
     if (progressEvents) {
-      progressEvents.forEach(function(progressEvent){
+      progressEvents.forEach(function (progressEvent) {
         if (!isNumber(progressEvent.offset)) {
           throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
         }
@@ -5227,8 +5243,9 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackPause() {
     //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
-    //      We should not track this pause event because it makes the VAST tracking confusing
-    if(player.currentTime() === player.duration()){
+    //      We should not track this pause event because it makes the VAST tracking confusing again we use a
+    //      Threshold of 2 seconds to prevent false positives on IOS.
+    if (Math.abs(player.duration() - player.currentTime()) < 2) {
       return;
     }
 
@@ -5384,6 +5401,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
 
+  player.preload("auto"); //without preload=auto the durationchange event is never fired
   player.src(source);
 
   playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
@@ -5418,7 +5436,6 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 VASTIntegrator.prototype._trackError = function trackError(error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
-
 
 ;
 (function (window) {
@@ -5687,19 +5704,26 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   }
 
   function addQuartileEvents(progress) {
+    var quartiles = this.quartiles;
     var firstQuartile = this.quartiles.firstQuartile;
     var midpoint = this.quartiles.midpoint;
     var thirdQuartile = this.quartiles.thirdQuartile;
 
     if (!firstQuartile.tracked) {
-      firstQuartile.tracked = canBeTracked(firstQuartile, progress);
-      addTrackEvent('firstQuartile', ONCE, firstQuartile.tracked);
+      trackQuartile('firstQuartile', progress);
     } else if (!midpoint.tracked) {
-      midpoint.tracked = canBeTracked(midpoint, progress);
-      addTrackEvent('midpoint', ONCE, midpoint.tracked);
+      trackQuartile('midpoint', progress);
     } else {
-      thirdQuartile.tracked = canBeTracked(thirdQuartile, progress);
-      addTrackEvent('thirdQuartile', ONCE, thirdQuartile.tracked);
+      trackQuartile('thirdQuartile', progress);
+    }
+
+    /*** Local function ***/
+    function trackQuartile(quartileName, progress){
+      var quartile = quartiles[quartileName];
+      if(canBeTracked(quartile, progress)){
+        quartile.tracked = true;
+        addTrackEvent(quartileName, ONCE, true);
+      }
     }
   }
 
@@ -5989,3 +6013,4 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
+//# sourceMappingURL=videojs-vast-vpaid.js.map

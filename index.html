@@ -3,7 +3,11 @@
 <head>
   <title>tag-validator</title>
   <link href="dist/app.css" media="all" rel="stylesheet">
-  <script src="bower_components/video.js/dist/video-js/video.js"></script>
+  <script src="node_modules/video.js/dist/video.js"></script>
+  <script>
+    var vjs = videojs
+    var vjsComponent = videojs.getComponent('Component')
+  </script>
   <script src="vendors/videojs-vast-vpaid-without-credentials.js"></script>
 </head>
 <body style="margin-top: 1em;">
