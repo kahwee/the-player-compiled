@@ -5136,8 +5136,9 @@ var form = document.getElementById('main');
 var inputControl = document.getElementById('input-url');
 var pauseResume = document.getElementById('pause-resume');
 var parsed = _queryString2['default'].parse(window.location.search);
-inputControl.value = parsed.url;
-console.log(window.location);
+if (parsed.url) {
+  inputControl.value = parsed.url;
+}
 inputControl.addEventListener('change', function (ev) {
   document.getElementById('input-url-hidden').value = '' + window.location.origin + window.location.pathname + '?url=' + encodeURIComponent(ev.target.value);
 });
