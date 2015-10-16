@@ -23,8 +23,10 @@
             <label for="input-url">URL</label>
             <div class="input-group">
               <textarea rows="3" class="form-control" id="input-url" placeholder="Enter URL">https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml</textarea>
+              <input type="hidden" id="input-url-hidden" />
               <span class="input-group-btn">
-                <button class="btn btn-secondary" type="submit">Load</button>
+                <button class="btn btn-secondary" type="submit" id="load">Load</button>
+                <button class="btn btn-secondary" type="button" id="copy" data-clipboard-target="#input-url-hidden">Copy Link</button>
               </span>
             </div>
             <small class="text-muted">Currently only supporting URL</small>
