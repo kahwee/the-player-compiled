@@ -5137,9 +5137,9 @@ var inputControl = document.getElementById('input-url');
 var pauseResume = document.getElementById('pause-resume');
 var parsed = _queryString2['default'].parse(window.location.search);
 inputControl.value = parsed.url;
-
+console.log(window.location);
 inputControl.addEventListener('change', function (ev) {
-  document.getElementById('input-url-hidden').value = window.location.href + '?url=' + encodeURIComponent(ev.target.value);
+  document.getElementById('input-url-hidden').value = '' + window.location.origin + window.location.pathname + '?url=' + encodeURIComponent(ev.target.value);
 });
 form.addEventListener('submit', function (ev) {
   ev.preventDefault();
@@ -5158,7 +5158,8 @@ pauseResume.addEventListener('click', function (ev) {
     player.videojs.vast.adUnit.pauseAd();
   }
 });
-new _clipboard2['default']('#copy');
+console.log(_clipboard2['default']);
+window.x = new _clipboard2['default']('#copy');
 
 },{"./ads-setup-plugin":198,"./components/Logger":200,"./components/Player":201,"./constants/videojs-options":203,"./util/get-domain":204,"babel-core/polyfill":187,"clipboard":195,"query-string":196}],200:[function(require,module,exports){
 'use strict';
