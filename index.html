@@ -14,26 +14,51 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-md-4">
+        <form id="main">
+          <fieldset class="form-group">
+            <label for="input-url" class="form-control-label form-control-label-sm">URL</label>
+            <div class="input-group">
+              <textarea rows="3" class="form-control form-control-sm" id="input-url" placeholder="Enter URL">https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml</textarea>
+              <input type="hidden" id="input-url-hidden" />
+              <span class="input-group-btn">
+                <button class="btn btn-primary btn-sm" type="submit" id="load">Load</button>
+              </span>
+            </div>
+          </fieldset>
+          <fieldset class="form-group" id="trmr-vast">
+            <label for="input-url" class="form-control-label form-control-label-sm">XML</label>
+            <textarea class="form-control form-control-sm" rows="4" readonly id="xml" placeholder="Not ready"></textarea>
+          </fieldset>
+          <fieldset class="form-group" id="trmr-vast">
+            <label for="input-url" class="form-control-label form-control-label-sm">TRMR MediaFile</label>
+            <div class="input-group">
+              <input class="form-control form-control-sm" value="" readonly id="trmr-mediafile-addata"/>
+              <span class="input-group-btn">
+                <button class="btn btn-secondary btn-sm" type="button" type="button">
+                  <i class="fa fa-info-circle"></i>
+                </button>
+              </span>
+            </div>
+          </fieldset>
+        </form>
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Evt</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <section>
+        </section>
         <ul id="logger" class="list-group">
           <li class="list-group-item">Click on Load to begin</li>
         </ul>
       </div>
       <div class="col-md-8">
-        <form id="main">
-          <fieldset class="form-group">
-            <label for="input-url">URL</label>
-            <div class="input-group">
-              <textarea rows="3" class="form-control" id="input-url" placeholder="Enter URL">https://dl.dropboxusercontent.com/s/t077e80lxeuz3wd/trmr-vpaid.vast.xml</textarea>
-              <input type="hidden" id="input-url-hidden" />
-              <span class="input-group-btn">
-                <button class="btn btn-secondary" type="submit" id="load">Load</button>
-                <button class="btn btn-secondary" type="button" id="copy" data-clipboard-target="#input-url-hidden">Copy Link</button>
-              </span>
-            </div>
-            <small class="text-muted">Currently only supporting URL</small>
-          </fieldset>
-          <button id="pause-resume" class="btn btn-default btn-sm" disabled>Pause/Resume Ad</button>
-        </form>
+        <button id="pause-resume" class="btn btn-default btn-sm" disabled>Pause/Resume Ad</button>
         <section class="embed-responsive embed-responsive-16by9">
           <video id="the-player" class="video-js vjs-default-skin embed-responsive-item" controls preload="auto" width="600" height="320" poster="http://video-js.zencoder.com/oceans-clip.png">
             <source type="video/mp4" src="http://video-js.zencoder.com/oceans-clip.mp4">
