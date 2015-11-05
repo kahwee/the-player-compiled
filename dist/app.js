@@ -6412,7 +6412,9 @@ form.addEventListener('submit', function (ev) {
       document.getElementById('trmr-mediafile-addata').value = query.adData;
       var oSerializer = new XMLSerializer();
       var sXML = oSerializer.serializeToString(resp);
-      opts.plugins['ads-setup'].adTagXML = sXML;
+      opts.plugins['ads-setup'].adTagXML = function () {
+        return sXML;
+      };
       document.getElementById('xml').value = sXML;
       player.startVideojs(opts);
       player.update();
