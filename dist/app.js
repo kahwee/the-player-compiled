@@ -6297,7 +6297,6 @@ function molVastSetup(opts) {
   var options = Object.assign({}, this.options_, opts);
 
   var pluginSettings = {
-    url: getAdTagUrl,
     playAdAlways: true,
     adCancelTimeout: options.adCancelTimeout || 3000,
     adsEnabled: !!options.adsEnabled,
@@ -6305,11 +6304,11 @@ function molVastSetup(opts) {
   };
 
   if (options.adTagUrl) {
-    pluginSettings.adTagUrl = pluginSettings.url = options.adTagUrl;
+    pluginSettings.adTagUrl = options.adTagUrl;
   }
 
   if (options.adTagXML) {
-    pluginSettings.adTagXML = pluginSettings.url = options.adTagXML;
+    pluginSettings.adTagXML = options.adTagXML;
   }
 
   var vastAd = player.vastClient(pluginSettings);
@@ -6420,7 +6419,7 @@ form.addEventListener('submit', function (ev) {
       player.update();
     }
   });
-  logger.add('Loaded from ' + (0, _getDomain2.default)(inputControl.value));
+  logger.add('Loaded from ' + (0, _getDomain2.default)(inputControl.value), 'XHR');
   pauseResume.disabled = false;
 });
 pauseResume.addEventListener('click', function (ev) {
@@ -6453,11 +6452,15 @@ var Logger = (function () {
 
   _createClass(Logger, [{
     key: 'add',
-    value: function add(message) {
-      var li = document.createElement('li');
-      li.textContent = message;
-      li.className = 'list-group-item';
-      this.el.appendChild(li);
+    value: function add(message, event) {
+      var tr = document.createElement('tr');
+      var tdEvent = document.createElement('td');
+      var tdMessage = document.createElement('td');
+      tdEvent.textContent = event;
+      tdMessage.textContent = message;
+      tr.appendChild(tdEvent);
+      tr.appendChild(tdMessage);
+      this.el.appendChild(tr);
     }
   }]);
 
@@ -6511,17 +6514,17 @@ var Player = (function () {
 
         events.videojs.forEach(function (eventName) {
           _this.on(eventName, function (ev) {
-            logger.add('' + ev.type);
+            logger.add('' + ev.type, 'Video.js');
           });
         });
         events.vast.forEach(function (eventName) {
           _this.on(eventName, function (ev) {
-            logger.add('' + ev.type);
+            logger.add('' + ev.type, 'VAST');
           });
         });
         events.vpaid.forEach(function (eventName) {
           _this.on(eventName, function (ev) {
-            logger.add('' + ev.type);
+            logger.add('' + ev.type, 'VPAID');
           });
         });
         this.play();
