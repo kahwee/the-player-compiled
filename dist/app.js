@@ -6383,7 +6383,8 @@ var logger = new _Logger2.default('logger');
 var player = new _Player2.default('the-player');
 var form = document.getElementById('main');
 var inputControl = document.getElementById('input-url');
-var pauseResume = document.getElementById('pause-resume');
+var elPauseResume = document.getElementById('pause-resume');
+var elSkip = document.getElementById('skip');
 var parsed = _queryString2.default.parse(window.location.search);
 if (parsed.url) {
   inputControl.value = parsed.url;
@@ -6417,12 +6418,29 @@ form.addEventListener('submit', function (ev) {
       document.getElementById('xml').value = sXML;
       player.startVideojs(opts);
       player.update();
+      window.player = player;
+      window.trmrHackyhack = function (context) {
+        context._adUnit.on('AdLoaded', function (ev) {
+          logger.add('AdLoaded', '_VPAID');
+        });
+        context._adUnit.on('AdInteraction', function (ev) {
+          logger.add('AdInteraction', '_VPAID');
+        });
+        context._adUnit.on('AdSkipped', function (ev) {
+          logger.add('AdSkipped', '_VPAID');
+        });
+        context._adUnit.on('AdSkippableStateChange', function (ev) {
+          logger.add('AdSkippableStateChange', '_VPAID');
+        });
+      };
     }
   });
   logger.add('Loaded from ' + (0, _getDomain2.default)(inputControl.value), 'XHR');
-  pauseResume.disabled = false;
+  elPauseResume.disabled = false;
+  elSkip.disabled = false;
 });
-pauseResume.addEventListener('click', function (ev) {
+
+elPauseResume.addEventListener('click', function (ev) {
   ev.preventDefault();
   if (player.videojs.vast.adUnit.isPaused()) {
     player.videojs.vast.adUnit.resumeAd();
@@ -6430,7 +6448,11 @@ pauseResume.addEventListener('click', function (ev) {
     player.videojs.vast.adUnit.pauseAd();
   }
 });
-window.x = new _clipboard2.default('#copy');
+
+elSkip.addEventListener('click', function (ev) {
+  ev.preventDefault();
+  player.videojs.vast.adUnit.skipAd();
+});
 
 },{"./ads-setup-plugin":208,"./components/Logger":210,"./components/Player":211,"./constants/videojs-options":213,"./util/get-domain":214,"babel-polyfill":1,"clipboard":193,"query-string":201,"reqwest":203,"url-parse":204}],210:[function(require,module,exports){
 'use strict';
